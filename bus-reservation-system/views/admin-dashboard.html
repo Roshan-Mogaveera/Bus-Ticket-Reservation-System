@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - BusHub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .admin-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            padding-top: 80px;
+            padding-bottom: 2rem;
+        }
+
+        .admin-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem 2rem;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .admin-navbar-left {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .admin-navbar-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--white);
+        }
+
+        .admin-navbar-menu {
+            display: flex;
+            gap: 1.5rem;
+            list-style: none;
+        }
+
+        .admin-navbar-menu a {
+            color: var(--gray-300);
+            text-decoration: none;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .admin-navbar-menu a:hover,
+        .admin-navbar-menu a.active {
+            color: var(--neon-cyan);
+        }
+
+        .admin-navbar-right {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.5rem;
+            background: rgba(6, 182, 212, 0.2);
+            color: var(--neon-cyan);
+        }
+
+        .stat-content h4 {
+            color: var(--white);
+            margin: 0 0 0.25rem 0;
+            font-size: 1rem;
+        }
+
+        .stat-value {
+            color: var(--neon-cyan);
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .chart-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-title {
+            color: var(--white);
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        table {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-collapse: collapse;
+            border-radius: 1rem;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--white);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        td {
+            padding: 1rem;
+            color: var(--gray-200);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            padding: 0.4rem 0.8rem;
+            border: none;
+            border-radius: 0.3rem;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.8rem;
+            transition: var(--transition);
+        }
+
+        .edit-btn {
+            background: var(--neon-cyan);
+            color: var(--primary-dark);
+        }
+
+        .delete-btn {
+            background: var(--danger);
+            color: var(--white);
+        }
+
+        @media (max-width: 768px) {
+            .admin-navbar-menu {
+                display: none;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ADMIN NAVBAR -->
+    <div class="admin-navbar">
+        <div class="admin-navbar-left">
+            <div class="admin-navbar-logo">
+                <i class="fas fa-lock"></i> Admin Dashboard
+            </div>
+            <ul class="admin-navbar-menu">
+                <li><a href="/admin-dashboard" class="active">Dashboard</a></li>
+                <li><a href="/manage-buses">Buses</a></li>
+                <li><a href="/manage-users">Users</a></li>
+                <li><a href="/manage-bookings">Bookings</a></li>
+            </ul>
+        </div>
+        <div class="admin-navbar-right">
+            <button onclick="logout()" class="btn btn-secondary btn-sm">Logout</button>
+        </div>
+    </div>
+
+    <div class="admin-container">
+        <div class="container">
+            <h2 style="color: var(--white); margin-bottom: 2rem;">
+                <i class="fas fa-chart-line"></i> Dashboard Overview
+            </h2>
+
+            <!-- STATS CARDS -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(79, 70, 229, 0.2); color: var(--secondary);">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h4>Total Users</h4>
+                        <p class="stat-value" id="totalUsers">0</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(168, 85, 247, 0.2); color: var(--neon-purple);">
+                        <i class="fas fa-bus"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h4>Active Buses</h4>
+                        <p class="stat-value" id="totalBuses">0</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(16, 185, 129, 0.2); color: var(--success);">
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h4>Total Bookings</h4>
+                        <p class="stat-value" id="totalBookings">0</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(250, 204, 21, 0.2); color: var(--warning);">
+                        <i class="fas fa-rupee-sign"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h4>Total Revenue</h4>
+                        <p class="stat-value" id="totalRevenue">₹0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHARTS -->
+            <div class="chart-container">
+                <h3 class="chart-title"><i class="fas fa-chart-area"></i> Revenue Trend</h3>
+                <canvas id="revenueChart"></canvas>
+            </div>
+
+            <!-- RECENT BOOKINGS -->
+            <div style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 1rem; padding: 1.5rem;">
+                <h3 style="color: var(--white); margin-bottom: 1rem;">Recent Bookings</h3>
+                <table id="bookingsTable">
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>Passenger</th>
+                            <th>Route</th>
+                            <th>Status</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookingsBody">
+                        <tr><td colspan="5" style="text-align: center;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/main.js"></script>
+    <script>
+        let revenueChart;
+
+        window.addEventListener('load', async () => {
+            if (!isLoggedIn() || !localStorage.getItem('adminRole')) {
+                window.location.href = '/admin-login';
+                return;
+            }
+
+            loadDashboard();
+        });
+
+        async function loadDashboard() {
+            showLoader('Loading dashboard...');
+
+            const statsResponse = await apiRequest('/admin/dashboard/stats');
+            const bookingsResponse = await apiRequest('/admin/bookings');
+            const analyticsResponse = await apiRequest('/admin/analytics/revenue');
+
+            hideLoader();
+
+            if (statsResponse.success) {
+                document.getElementById('totalUsers').textContent = statsResponse.stats.total_users;
+                document.getElementById('totalBuses').textContent = statsResponse.stats.total_buses;
+                document.getElementById('totalBookings').textContent = statsResponse.stats.total_bookings;
+                document.getElementById('totalRevenue').textContent = formatCurrency(statsResponse.stats.total_revenue);
+            }
+
+            if (bookingsResponse.success && bookingsResponse.bookings) {
+                const tbody = document.getElementById('bookingsBody');
+                tbody.innerHTML = bookingsResponse.bookings.slice(0, 10).map(booking => `
+                    <tr>
+                        <td style="font-family: monospace;">${booking.booking_id}</td>
+                        <td>${booking.full_name}</td>
+                        <td>${booking.source} → ${booking.destination}</td>
+                        <td>
+                            <span style="background: rgba(16, 185, 129, 0.2); color: var(--success); padding: 0.25rem 0.75rem; border-radius: 0.3rem; font-size: 0.85rem;">
+                                ${booking.booking_status}
+                            </span>
+                        </td>
+                        <td>${formatCurrency(booking.total_fare)}</td>
+                    </tr>
+                `).join('');
+            }
+
+            if (analyticsResponse.success && analyticsResponse.monthlyRevenue) {
+                drawRevenueChart(analyticsResponse.monthlyRevenue);
+            }
+        }
+
+        function drawRevenueChart(data) {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            const months = data.map(d => d.month).reverse();
+            const revenues = data.map(d => d.total || 0).reverse();
+
+            revenueChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Monthly Revenue (₹)',
+                        data: revenues,
+                        borderColor: '#06b6d4',
+                        backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#06b6d4',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#ffffff'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: {
+                                color: '#94a3b8'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#94a3b8'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

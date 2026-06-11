@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users - BusHub Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-logo"><i class="fas fa-lock"></i> Admin - Manage Users</div>
+            <div style="display: flex; gap: 1rem;"><button onclick="logout()" class="btn btn-secondary btn-sm">Logout</button></div>
+        </div>
+    </nav>
+
+    <div style="min-height: 100vh; background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); padding-top: 100px; padding-bottom: 4rem;">
+        <div class="container">
+            <h2 style="color: white; margin-bottom: 2rem;"><i class="fas fa-users"></i> Manage Users</h2>
+
+            <table style="width: 100%; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); border-radius: 1rem; overflow: hidden;">
+                <thead style="background: rgba(255,255,255,0.15);">
+                    <tr>
+                        <th style="padding: 1rem; color: white; border-bottom: 1px solid rgba(255,255,255,0.1);">Name</th>
+                        <th style="padding: 1rem; color: white; border-bottom: 1px solid rgba(255,255,255,0.1);">Email</th>
+                        <th style="padding: 1rem; color: white; border-bottom: 1px solid rgba(255,255,255,0.1);">Phone</th>
+                        <th style="padding: 1rem; color: white; border-bottom: 1px solid rgba(255,255,255,0.1);">Joined</th>
+                        <th style="padding: 1rem; color: white; border-bottom: 1px solid rgba(255,255,255,0.1);">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTable">
+                    <tr><td colspan="5" style="padding: 2rem; text-align: center; color: #94a3b8;">Loading users...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="/js/main.js"></script>
+    <script>
+        window.addEventListener('load', () => {
+            if (!isLoggedIn() || !localStorage.getItem('adminRole')) window.location.href = '/admin-login';
+            loadUsers();
+        });
+
+        async function loadUsers() {
+            const response = await apiRequest('/admin/users');
+            const tbody = document.getElementById('usersTable');
+            if (response.success && response.users) {
+                tbody.innerHTML = response.users.map(u => `
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 1rem; color: #f1f5f9;">${u.full_name}</td>
+                        <td style="padding: 1rem; color: #f1f5f9;">${u.email}</td>
+                        <td style="padding: 1rem; color: #f1f5f9;">${u.phone}</td>
+                        <td style="padding: 1rem; color: #f1f5f9;">${formatDate(u.created_at)}</td>
+                        <td style="padding: 1rem;"><button class="btn btn-secondary btn-sm" onclick="deleteUser(${u.id})">Delete</button></td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        async function deleteUser(id) {
+            if (!confirm('Are you sure?')) return;
+            const response = await apiRequest(`/admin/users/${id}`, 'DELETE');
+            if (response.success) {
+                showNotification('User deleted', 'success');
+                loadUsers();
+            }
+        }
+    </script>
+</body>
+</html>

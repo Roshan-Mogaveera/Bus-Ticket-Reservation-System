@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buses - BusHub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-logo"><i class="fas fa-bus"></i> BusHub</div>
+            <div class="navbar-buttons"></div>
+        </div>
+    </nav>
+
+    <div style="min-height: 100vh; background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); padding-top: 100px; padding-bottom: 4rem;">
+        <div class="container">
+            <h2 style="color: white; margin-bottom: 2rem;">Our Bus Fleet</h2>
+            <p style="color: #d1d5db; margin-bottom: 2rem;">Browse our premium collection of buses with various amenities</p>
+
+            <div class="grid grid-3" id="busesGrid">
+                <div class="card" style="text-align: center;">
+                    <div class="spinner" style="margin: 2rem auto;"></div>
+                    <p style="color: #94a3b8;">Loading buses...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer style="background: linear-gradient(135deg, #0f172a, #1e3a8a); border-top: 1px solid rgba(255,255,255,0.1); padding: 2rem 0; text-align: center; color: #94a3b8;">
+        <p>&copy; 2024 BusHub. All rights reserved.</p>
+    </footer>
+
+    <script src="/js/main.js"></script>
+    <script>
+        window.addEventListener('load', loadBuses);
+
+        async function loadBuses() {
+            const response = await apiRequest('/buses/routes/popular');
+            const grid = document.getElementById('busesGrid');
+            
+            if (response.success && response.routes) {
+                grid.innerHTML = response.routes.map(route => `
+                    <div class="card">
+                        <h4 style="color: white; margin-bottom: 1rem;">${route.source}</h4>
+                        <p style="color: #94a3b8; margin-bottom: 1rem; font-size: 0.9rem;">to</p>
+                        <h4 style="color: var(--neon-cyan); margin-bottom: 1.5rem;">${route.destination}</h4>
+                        <div style="display: flex; justify-content: space-around; margin-bottom: 1.5rem;">
+                            <div style="text-align: center;">
+                                <div style="color: var(--neon-cyan); font-size: 1.5rem; font-weight: 700;">${route.bus_count}</div>
+                                <div style="color: #94a3b8; font-size: 0.85rem;">Buses</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="color: var(--neon-purple); font-size: 1.5rem; font-weight: 700;">${route.avg_rating.toFixed(1)}</div>
+                                <div style="color: #94a3b8; font-size: 0.85rem;">Rating</div>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary btn-block" onclick="searchRoute('${route.source}', '${route.destination}')">
+                            <i class="fas fa-search"></i> View Buses
+                        </button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function searchRoute(source, destination) {
+            if (!isLoggedIn()) {
+                window.location.href = '/login';
+                return;
+            }
+            sessionStorage.setItem('searchParams', JSON.stringify({
+                source,
+                destination,
+                date: new Date().toISOString().split('T')[0]
+            }));
+            window.location.href = '/search';
+        }
+    </script>
+</body>
+</html>

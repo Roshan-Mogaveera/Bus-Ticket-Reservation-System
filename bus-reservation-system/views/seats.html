@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Seats - BusHub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .seats-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            padding-top: 100px;
+            padding-bottom: 4rem;
+        }
+
+        .seats-layout {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .seats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr) 0.5fr repeat(2, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .seat {
+            aspect-ratio: 1;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 0.4rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.7rem;
+            transition: all 0.2s ease;
+            background: linear-gradient(135deg, #64748b, #475569);
+            color: var(--white);
+            user-select: none;
+        }
+
+        .seat:hover:not(.booked) {
+            transform: scale(1.1);
+        }
+
+        .seat.available {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-color: #10b981;
+        }
+
+        .seat.available:hover {
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+        }
+
+        .seat.selected {
+            background: linear-gradient(135deg, #4f46e5, #06b6d4);
+            border-color: #4f46e5;
+            box-shadow: 0 0 20px rgba(79, 70, 229, 0.5);
+            transform: scale(1.15);
+        }
+
+        .seat.booked {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border-color: #ef4444;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .seat-legend {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--white);
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 0.3rem;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .summary-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .summary-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1rem;
+            padding: 2rem;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--white);
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .summary-label {
+            color: var(--gray-300);
+        }
+
+        .summary-value {
+            font-weight: 600;
+        }
+
+        .total-fare {
+            font-size: 1.5rem;
+            color: var(--neon-cyan);
+            font-weight: 700;
+        }
+
+        .proceed-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--secondary), var(--accent));
+            color: var(--white);
+            border: none;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 0 20px rgba(79, 70, 229, 0.3);
+        }
+
+        .proceed-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(79, 70, 229, 0.5);
+        }
+
+        .proceed-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 768px) {
+            .summary-section {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-logo">
+                <i class="fas fa-bus"></i> BusHub
+            </div>
+            <div class="navbar-buttons"></div>
+        </div>
+    </nav>
+
+    <div class="seats-container">
+        <div class="container">
+            <h2 style="color: var(--white); text-align: center; margin-bottom: 1rem;">
+                <i class="fas fa-chair"></i> Select Your Seats
+            </h2>
+            <p style="text-align: center; color: var(--gray-300); margin-bottom: 2rem;">Choose your preferred seats from the available options</p>
+
+            <div class="seats-layout">
+                <h4 style="color: var(--white); text-align: center; margin-bottom: 1.5rem;">Bus Layout</h4>
+
+                <div class="seat-legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: linear-gradient(135deg, #10b981, #059669);"></div>
+                        <span>Available</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: linear-gradient(135deg, #ef4444, #dc2626);"></div>
+                        <span>Booked</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: linear-gradient(135deg, #4f46e5, #06b6d4);"></div>
+                        <span>Selected</span>
+                    </div>
+                </div>
+
+                <div class="seats-grid" id="seatsGrid">
+                    <!-- Seats loaded by JavaScript -->
+                </div>
+            </div>
+
+            <div class="summary-section">
+                <div></div>
+                <div class="summary-card">
+                    <h4 style="color: var(--white); margin-bottom: 1.5rem;">Booking Summary</h4>
+
+                    <div class="summary-item">
+                        <span class="summary-label">Bus:</span>
+                        <span class="summary-value" id="busName">-</span>
+                    </div>
+
+                    <div class="summary-item">
+                        <span class="summary-label">Date:</span>
+                        <span class="summary-value" id="travelDate">-</span>
+                    </div>
+
+                    <div class="summary-item">
+                        <span class="summary-label">Selected Seats:</span>
+                        <span class="summary-value" id="selectedSeatsDisplay">None</span>
+                    </div>
+
+                    <div class="summary-item">
+                        <span class="summary-label">Passengers:</span>
+                        <span class="summary-value" id="numPassengers">0</span>
+                    </div>
+
+                    <div class="summary-item">
+                        <span class="summary-label">Price per Seat:</span>
+                        <span class="summary-value" id="pricePerSeat">-</span>
+                    </div>
+
+                    <div class="summary-item" style="border-bottom: 2px solid rgba(6, 182, 212, 0.3);">
+                        <span style="color: var(--neon-cyan); font-size: 1.1rem; font-weight: 700;">Total Fare:</span>
+                        <span class="total-fare" id="totalFare">₹0</span>
+                    </div>
+
+                    <button class="proceed-btn" id="proceedBtn" onclick="proceedToPayment()" disabled>
+                        Proceed to Payment <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/main.js"></script>
+    <script>
+        let selectedSeats = [];
+        let busDetails = {};
+        let scheduleDetails = {};
+
+        window.addEventListener('load', () => {
+            if (!isLoggedIn()) {
+                window.location.href = '/login';
+                return;
+            }
+
+            loadSeats();
+        });
+
+        async function loadSeats() {
+            const busId = sessionStorage.getItem('selectedBusId');
+            const scheduleId = sessionStorage.getItem('selectedScheduleId');
+
+            if (!busId || !scheduleId) {
+                window.location.href = '/search';
+                return;
+            }
+
+            showLoader('Loading seats...');
+
+            // Get bus details
+            const busResponse = await apiRequest(`/buses/${busId}`);
+            if (busResponse.success) {
+                busDetails = busResponse.bus;
+                scheduleDetails = busResponse.schedules.find(s => s.id === parseInt(scheduleId));
+
+                document.getElementById('busName').textContent = busDetails.bus_name;
+                document.getElementById('travelDate').textContent = formatDate(scheduleDetails.departure_date);
+                document.getElementById('pricePerSeat').textContent = formatCurrency(scheduleDetails.ticket_price);
+            }
+
+            // Get available seats
+            const seatsResponse = await apiRequest(`/buses/schedule/${scheduleId}/seats`);
+            hideLoader();
+
+            if (seatsResponse.success) {
+                displaySeats(seatsResponse.seats);
+            }
+        }
+
+        function displaySeats(seats) {
+            const grid = document.getElementById('seatsGrid');
+            let html = '';
+            
+            // Sort seats properly so 1A comes before 10A
+            seats.sort((a, b) => {
+                const numA = parseInt(a.seat_number);
+                const numB = parseInt(b.seat_number);
+                const charA = a.seat_number.replace(/[0-9]/g, '');
+                const charB = b.seat_number.replace(/[0-9]/g, '');
+                if (numA === numB) {
+                    return charA.localeCompare(charB);
+                }
+                return numA - numB;
+            });
+
+            // Limit to exactly 28 seats (7 rows of 4 seats)
+            const seatsToShow = seats.slice(0, 28);
+            
+            seatsToShow.forEach((seat, index) => {
+                html += `
+                    <div 
+                        class="seat ${seat.is_available ? 'available' : 'booked'}" 
+                        data-seat="${seat.seat_number}"
+                        onclick="toggleSeat('${seat.seat_number}', ${seat.is_available})"
+                        title="${seat.seat_number}"
+                    >
+                        ${seat.seat_number}
+                    </div>
+                `;
+                
+                // Add an empty space for the aisle after every 2nd seat
+                if ((index + 1) % 4 === 2) {
+                    html += `<div class="aisle"></div>`;
+                }
+            });
+            
+            grid.innerHTML = html;
+        }
+
+        function toggleSeat(seatNumber, isAvailable) {
+            if (!isAvailable) {
+                showNotification('This seat is already booked', 'danger');
+                return;
+            }
+
+            const seatElement = document.querySelector(`[data-seat="${seatNumber}"]`);
+            
+            if (seatElement.classList.contains('selected')) {
+                seatElement.classList.remove('selected');
+                selectedSeats = selectedSeats.filter(s => s !== seatNumber);
+            } else {
+                seatElement.classList.add('selected');
+                selectedSeats.push(seatNumber);
+            }
+
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const numPassengers = selectedSeats.length;
+            const pricePerSeat = scheduleDetails.ticket_price;
+            const totalFare = numPassengers * pricePerSeat;
+
+            document.getElementById('selectedSeatsDisplay').textContent = selectedSeats.length > 0 ? selectedSeats.join(', ') : 'None';
+            document.getElementById('numPassengers').textContent = numPassengers;
+            document.getElementById('totalFare').textContent = formatCurrency(totalFare);
+
+            const proceedBtn = document.getElementById('proceedBtn');
+            proceedBtn.disabled = numPassengers === 0;
+
+            setSeatSelection(selectedSeats);
+        }
+
+        function proceedToPayment() {
+            const bookingData = {
+                schedule_id: parseInt(sessionStorage.getItem('selectedScheduleId')),
+                selected_seats: selectedSeats,
+                num_passengers: selectedSeats.length,
+                total_fare: selectedSeats.length * scheduleDetails.ticket_price
+            };
+
+            setBookingData(bookingData);
+            window.location.href = '/payment';
+        }
+    </script>
+</body>
+</html>

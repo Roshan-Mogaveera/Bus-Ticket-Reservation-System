@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Bookings - BusHub Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-logo"><i class="fas fa-lock"></i> Admin - Manage Bookings</div>
+            <div style="display: flex; gap: 1rem;"><button onclick="logout()" class="btn btn-secondary btn-sm">Logout</button></div>
+        </div>
+    </nav>
+
+    <div style="min-height: 100vh; background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); padding-top: 100px; padding-bottom: 4rem;">
+        <div class="container">
+            <h2 style="color: white; margin-bottom: 2rem;"><i class="fas fa-ticket-alt"></i> All Bookings</h2>
+
+            <table style="width: 100%; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); border-radius: 1rem; overflow: hidden;">
+                <thead style="background: rgba(255,255,255,0.15);">
+                    <tr>
+                        <th style="padding: 1rem; color: white; border-bottom: 1px solid rgba(255,255,255,0.1);">Booking ID</th>
+                        <th style="padding: 1rem; color: white; border-bottom: 1px solid rgba(255,255,255,0.1);">Passenger</th>
+                        <th style="padding: 1rem; color: white; border-bottom: 1px solid rgba(255,255,255,0.1);">Route</th>
+                        <th style="padding: 1rem; color: white; border-bottom: 1px solid rgba(255,255,255,0.1);">Status</th>
+                        <th style="padding: 1rem; color: white; border-bottom: 1px solid rgba(255,255,255,0.1);">Fare</th>
+                    </tr>
+                </thead>
+                <tbody id="bookingsTable">
+                    <tr><td colspan="5" style="padding: 2rem; text-align: center; color: #94a3b8;">Loading bookings...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="/js/main.js"></script>
+    <script>
+        window.addEventListener('load', () => {
+            if (!isLoggedIn() || !localStorage.getItem('adminRole')) window.location.href = '/admin-login';
+            loadBookings();
+        });
+
+        async function loadBookings() {
+            const response = await apiRequest('/admin/bookings');
+            const tbody = document.getElementById('bookingsTable');
+            if (response.success && response.bookings) {
+                tbody.innerHTML = response.bookings.map(b => `
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 1rem; color: #f1f5f9; font-family: monospace;">${b.booking_id}</td>
+                        <td style="padding: 1rem; color: #f1f5f9;">${b.full_name}</td>
+                        <td style="padding: 1rem; color: #f1f5f9;">${b.source} → ${b.destination}</td>
+                        <td style="padding: 1rem; color: #f1f5f9;"><span style="background: rgba(16,185,129,0.2); color: #10b981; padding: 0.25rem 0.75rem; border-radius: 0.3rem;">${b.booking_status}</span></td>
+                        <td style="padding: 1rem; color: #f1f5f9;">${formatCurrency(b.total_fare)}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+    </script>
+</body>
+</html>

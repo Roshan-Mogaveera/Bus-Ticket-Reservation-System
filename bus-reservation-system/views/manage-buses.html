@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Buses - BusHub Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-logo"><i class="fas fa-lock"></i> Admin - Manage Buses</div>
+            <div style="display: flex; gap: 1rem;"><button onclick="logout()" class="btn btn-secondary btn-sm">Logout</button></div>
+        </div>
+    </nav>
+
+    <div style="min-height: 100vh; background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); padding-top: 100px; padding-bottom: 4rem;">
+        <div class="container">
+            <h2 style="color: white; margin-bottom: 2rem;"><i class="fas fa-bus"></i> Manage Buses</h2>
+            
+            <div class="card" style="margin-bottom: 2rem;">
+                <button class="btn btn-primary" onclick="openAddBusForm()"><i class="fas fa-plus"></i> Add New Bus</button>
+            </div>
+
+            <table style="width: 100%; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); border-radius: 1rem; overflow: hidden;">
+                <thead style="background: rgba(255,255,255,0.15);">
+                    <tr>
+                        <th style="padding: 1rem; color: white; border-bottom: 1px solid rgba(255,255,255,0.1);">Bus Name</th>
+                        <th style="padding: 1rem; color: white; border-bottom: 1px solid rgba(255,255,255,0.1);">Bus Number</th>
+                        <th style="padding: 1rem; color: white; border-bottom: 1px solid rgba(255,255,255,0.1);">Type</th>
+                        <th style="padding: 1rem; color: white; border-bottom: 1px solid rgba(255,255,255,0.1);">Seats</th>
+                        <th style="padding: 1rem; color: white; border-bottom: 1px solid rgba(255,255,255,0.1);">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="busesTable">
+                    <tr><td colspan="5" style="padding: 2rem; text-align: center; color: #94a3b8;">Loading buses...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add Bus Modal -->
+    <div id="addBusModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Bus</h3>
+                <button class="modal-close" onclick="closeModal('addBusModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="addBusForm" onsubmit="handleBusSubmit(event)">
+                <div class="form-field" style="margin-bottom: 1rem;">
+                    <label>Bus Name</label>
+                    <input type="text" id="bus_name" required placeholder="e.g. Maharaja Express">
+                </div>
+                <div class="form-field" style="margin-bottom: 1rem;">
+                    <label>Bus Number</label>
+                    <input type="text" id="bus_number" required placeholder="e.g. MH01ABC">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div class="form-field">
+                        <label>Bus Type</label>
+                        <select id="bus_type" required>
+                            <option value="AC">AC</option>
+                            <option value="Non-AC">Non-AC</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label>Seating Type</label>
+                        <select id="seating_type" required>
+                            <option value="Seater">Seater</option>
+                            <option value="Sleeper">Sleeper</option>
+                            <option value="Semi-Sleeper">Semi-Sleeper</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div class="form-field">
+                        <label>Total Seats</label>
+                        <input type="number" id="total_seats" required min="10" max="100" placeholder="40">
+                    </div>
+                    <div class="form-field">
+                        <label>Route</label>
+                        <select id="route_id" required>
+                            <option value="">Select Route</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-field" style="margin-bottom: 1.5rem;">
+                    <label>Operator Name</label>
+                    <input type="text" id="operator_name" required placeholder="e.g. VRL Travels">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" id="submitBusBtn">Add Bus</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Bus Modal -->
+    <div id="editBusModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Bus</h3>
+                <button class="modal-close" onclick="closeModal('editBusModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="editBusForm" onsubmit="handleEditBusSubmit(event)">
+                <input type="hidden" id="edit_bus_id">
+                <div class="form-field" style="margin-bottom: 1rem;">
+                    <label>Bus Name</label>
+                    <input type="text" id="edit_bus_name" required>
+                </div>
+                <div class="form-field" style="margin-bottom: 1rem;">
+                    <label>Bus Number</label>
+                    <input type="text" id="edit_bus_number" required>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div class="form-field">
+                        <label>Bus Type</label>
+                        <select id="edit_bus_type" required>
+                            <option value="AC">AC</option>
+                            <option value="Non-AC">Non-AC</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label>Seating Type</label>
+                        <select id="edit_seating_type" required>
+                            <option value="Seater">Seater</option>
+                            <option value="Sleeper">Sleeper</option>
+                            <option value="Semi-Sleeper">Semi-Sleeper</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div class="form-field">
+                        <label>Total Seats</label>
+                        <input type="number" id="edit_total_seats" required min="10" max="100">
+                    </div>
+                    <div class="form-field">
+                        <label>Route</label>
+                        <select id="edit_route_id" required>
+                            <option value="">Select Route</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-field" style="margin-bottom: 1.5rem;">
+                    <label>Operator Name</label>
+                    <input type="text" id="edit_operator_name" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" id="submitEditBusBtn">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/main.js"></script>
+    <script>
+        window.addEventListener('load', () => {
+            if (!isLoggedIn() || !localStorage.getItem('adminRole')) window.location.href = '/admin-login';
+            loadBuses();
+        });
+
+        let allBuses = [];
+
+        async function loadBuses() {
+            const response = await apiRequest('/admin/buses');
+            const tbody = document.getElementById('busesTable');
+            if (response.success && response.buses) {
+                allBuses = response.buses;
+                tbody.innerHTML = response.buses.map(b => `
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 1rem; color: #f1f5f9;">${b.bus_name}</td>
+                        <td style="padding: 1rem; color: #f1f5f9;">${b.bus_number}</td>
+                        <td style="padding: 1rem; color: #f1f5f9;">${b.bus_type}</td>
+                        <td style="padding: 1rem; color: #f1f5f9;">${b.total_seats}</td>
+                        <td style="padding: 1rem;"><button class="btn btn-secondary btn-sm" onclick="editBus(${b.id})">Edit</button></td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        async function openAddBusForm() {
+            showLoader('Loading form...');
+            const response = await apiRequest('/buses/routes/all');
+            hideLoader();
+            if (response.success && response.routes) {
+                const routeSelect = document.getElementById('route_id');
+                routeSelect.innerHTML = '<option value="">Select Route</option>' + response.routes.map(r => 
+                    `<option value="${r.id}">${r.source} to ${r.destination}</option>`
+                ).join('');
+                document.getElementById('addBusForm').reset();
+                openModal('addBusModal');
+            } else {
+                showNotification('Failed to load routes', 'danger');
+            }
+        }
+
+        async function handleBusSubmit(event) {
+            event.preventDefault();
+            const submitBtn = document.getElementById('submitBusBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Adding...';
+
+            const payload = {
+                bus_name: document.getElementById('bus_name').value,
+                bus_number: document.getElementById('bus_number').value,
+                bus_type: document.getElementById('bus_type').value,
+                seating_type: document.getElementById('seating_type').value,
+                total_seats: parseInt(document.getElementById('total_seats').value),
+                route_id: parseInt(document.getElementById('route_id').value),
+                operator_name: document.getElementById('operator_name').value
+            };
+
+            const response = await apiRequest('/admin/buses/add', 'POST', payload);
+
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Add Bus';
+
+            if (response.success) {
+                showNotification('Bus added successfully!', 'success');
+                closeModal('addBusModal');
+                loadBuses();
+            } else {
+                showNotification(response.message || 'Failed to add bus', 'danger');
+            }
+        }
+
+        async function editBus(id) {
+            const bus = allBuses.find(b => b.id === id);
+            if (!bus) return;
+
+            showLoader('Loading form...');
+            const response = await apiRequest('/buses/routes/all');
+            hideLoader();
+            
+            if (response.success && response.routes) {
+                const routeSelect = document.getElementById('edit_route_id');
+                routeSelect.innerHTML = '<option value="">Select Route</option>' + response.routes.map(r => 
+                    `<option value="${r.id}">${r.source} to ${r.destination}</option>`
+                ).join('');
+                
+                // Pre-fill form
+                document.getElementById('edit_bus_id').value = bus.id;
+                document.getElementById('edit_bus_name').value = bus.bus_name;
+                document.getElementById('edit_bus_number').value = bus.bus_number;
+                document.getElementById('edit_bus_type').value = bus.bus_type;
+                document.getElementById('edit_seating_type').value = bus.seating_type;
+                document.getElementById('edit_total_seats').value = bus.total_seats;
+                document.getElementById('edit_route_id').value = bus.route_id;
+                document.getElementById('edit_operator_name').value = bus.operator_name || '';
+
+                openModal('editBusModal');
+            } else {
+                showNotification('Failed to load routes', 'danger');
+            }
+        }
+
+        async function handleEditBusSubmit(event) {
+            event.preventDefault();
+            const submitBtn = document.getElementById('submitEditBusBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Saving...';
+
+            const id = document.getElementById('edit_bus_id').value;
+            const payload = {
+                bus_name: document.getElementById('edit_bus_name').value,
+                bus_number: document.getElementById('edit_bus_number').value,
+                bus_type: document.getElementById('edit_bus_type').value,
+                seating_type: document.getElementById('edit_seating_type').value,
+                total_seats: parseInt(document.getElementById('edit_total_seats').value),
+                route_id: parseInt(document.getElementById('edit_route_id').value),
+                operator_name: document.getElementById('edit_operator_name').value
+            };
+            const response = await apiRequest(`/admin/buses/${id}`, 'PUT', payload);
+
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Save Changes';
+
+            if (response.success) {
+                showNotification('Bus updated successfully!', 'success');
+                closeModal('editBusModal');
+                loadBuses();
+            } else {
+                showNotification(response.message || 'Failed to update bus', 'danger');
+            }
+        }
+    </script>
+</body>
+</html>
